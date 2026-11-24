@@ -14,6 +14,8 @@ public class ScoreRecord {
     private String subject;
     private Double score;
     private Date createTime;
+    private String modifier;
+    private Date updateTime;
 
     public Integer getId() {
         return id;
@@ -69,5 +71,21 @@ public class ScoreRecord {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public String getModifier() {
+        return modifier;
+    }
+
+    public void setModifier(String modifier) {
+        this.modifier = modifier;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 }
