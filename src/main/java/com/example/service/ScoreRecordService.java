@@ -3,6 +3,7 @@ package com.example.service;
 import com.example.dao.ScoreRecordDao;
 import com.example.entity.ScoreChangeLog;
 import com.example.entity.ScoreRecord;
+import com.example.entity.SubjectStat;
 
 import java.util.List;
 
@@ -21,6 +22,11 @@ public class ScoreRecordService {
     /** 科目下拉选项 */
     public List<String> subjects() {
         return scoreRecordDao.findSubjects();
+    }
+
+    /** 各科目统计：平均分、最高分、最低分、及格率 */
+    public List<SubjectStat> subjectStats() {
+        return scoreRecordDao.findSubjectStats();
     }
 
     public ScoreRecord get(int id) {

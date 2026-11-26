@@ -72,6 +72,7 @@
 </form>
 
 <a class="btn" href="add.jsp">+ 录入成绩</a>
+<a class="btn" href="stats">科目统计</a>
 <a class="btn" href="scores?action=logs">修改记录</a>
 
 <c:choose>

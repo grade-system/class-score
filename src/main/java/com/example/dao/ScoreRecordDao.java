@@ -2,6 +2,7 @@ package com.example.dao;
 
 import com.example.entity.ScoreChangeLog;
 import com.example.entity.ScoreRecord;
+import com.example.entity.SubjectStat;
 import com.example.util.DBUtil;
 
 import java.sql.Connection;
@@ -144,6 +145,26 @@ public class ScoreRecordDao {
         } catch (SQLException e) {
             throw new RuntimeException("修改成绩失败", e);
         }
+    }
+
+    /** 科目统计：一条 SQL 聚合出条数、平均分、最高分、最低分与及格人数 */
+    public List<SubjectStat> findSubjectStats() {
+        String sql = "select subject, count(*) total, avg(score) avg_score, max(score) max_score, "
+                + "min(score) min_score, sum(case when score >= 60 then 1 else 0 end) pass_count "
+                + "from score_record group by subject order by subject";
+        return DBUtil.query(sql, new DBUtil.RowMapper<SubjectStat>() {
+            @Override
+            public SubjectStat mapRow(ResultSet rs) throws SQLException {
+                SubjectStat stat = new SubjectStat();
+                stat.setSubject(rs.getString("subject"));
+                stat.setTotal(rs.getInt("total"));
+                stat.setAverage(rs.getDouble("avg_score"));
+                stat.setMaxScore(rs.getDouble("max_score"));
+                stat.setMinScore(rs.getDouble("min_score"));
+                stat.setPassCount(rs.getInt("pass_count"));
+                return stat;
+            }
+        });
     }
 
     public List<ScoreChangeLog> findLogs(int limit) {
