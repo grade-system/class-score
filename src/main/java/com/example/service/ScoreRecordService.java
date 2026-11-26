@@ -33,8 +33,9 @@ public class ScoreRecordService {
         return scoreRecordDao.findById(id);
     }
 
-    public List<ScoreChangeLog> recentLogs(int limit) {
-        return scoreRecordDao.findLogs(limit);
+    /** 修改留痕：可按学号过滤，最多返回 limit 条 */
+    public List<ScoreChangeLog> recentLogs(int limit, String studentNo) {
+        return scoreRecordDao.findLogs(limit, studentNo);
     }
 
     public void add(ScoreRecord record) {

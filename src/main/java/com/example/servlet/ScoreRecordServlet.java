@@ -28,7 +28,9 @@ public class ScoreRecordServlet extends HttpServlet {
             return;
         }
         if ("logs".equals(action)) {
-            request.setAttribute("logs", scoreRecordService.recentLogs(50));
+            String studentNo = trim(request.getParameter("studentNo"));
+            request.setAttribute("logs", scoreRecordService.recentLogs(50, studentNo));
+            request.setAttribute("studentNo", studentNo);
             request.getRequestDispatcher("logs.jsp").forward(request, response);
             return;
         }

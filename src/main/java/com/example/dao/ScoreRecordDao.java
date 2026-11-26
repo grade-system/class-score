@@ -167,10 +167,18 @@ public class ScoreRecordDao {
         });
     }
 
-    public List<ScoreChangeLog> findLogs(int limit) {
-        String sql = "select id, score_id, student_no, subject, old_score, new_score, operator, change_time "
-                + "from score_change_log order by id desc limit ?";
-        return DBUtil.query(sql, LOG_MAPPER, limit);
+    /** 修改留痕：按学号过滤，最近 limit 条倒序 */
+    public List<ScoreChangeLog> findLogs(int limit, String studentNo) {
+        StringBuilder sql = new StringBuilder("select id, score_id, student_no, subject, old_score, new_score, "
+                + "operator, change_time from score_change_log where 1 = 1");
+        List<Object> args = new ArrayList<Object>();
+        if (studentNo != null && !studentNo.trim().isEmpty()) {
+            sql.append(" and student_no = ?");
+            args.add(studentNo.trim());
+        }
+        sql.append(" order by id desc limit ?");
+        args.add(limit);
+        return DBUtil.query(sql.toString(), LOG_MAPPER, args.toArray());
     }
 
     /** 业务规则：同一学生同一科目只允许一条成绩 */
