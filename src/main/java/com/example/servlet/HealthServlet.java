@@ -7,10 +7,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * 健康检查：部署后一条 curl 即可判断应用、容器、数据库是否都正常。
@@ -18,6 +20,26 @@ import java.sql.Statement;
  */
 @WebServlet("/health")
 public class HealthServlet extends HttpServlet {
+
+    /** 打包时由 Maven 资源过滤写入，用于在线上确认跑的是哪一次构建 */
+    private static final Properties BUILD = new Properties();
+
+    static {
+        InputStream in = HealthServlet.class.getClassLoader().getResourceAsStream("build.properties");
+        if (in != null) {
+            try {
+                BUILD.load(in);
+            } catch (IOException ignored) {
+                // 构建信息缺失不影响健康检查主流程
+            } finally {
+                try {
+                    in.close();
+                } catch (IOException ignored) {
+                    // 忽略关闭异常
+                }
+            }
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -50,8 +72,8 @@ public class HealthServlet extends HttpServlet {
         out.print("{"
                 + "\"status\":\"" + status + "\","
                 + "\"app\":\"class-score\","
-                + "\"version\":\"" + esc(getServletContext().getInitParameter("app.version") == null
-                ? "1.0" : getServletContext().getInitParameter("app.version")) + "\","
+                + "\"version\":\"" + esc(BUILD.getProperty("build.version", "1.0")) + "\","
+                + "\"buildTime\":\"" + esc(BUILD.getProperty("build.time", "unknown")) + "\","
                 + "\"contextPath\":\"" + esc(request.getContextPath()) + "\","
                 + "\"port\":" + request.getServerPort() + ","
                 + "\"java\":\"" + esc(System.getProperty("java.version")) + "\","

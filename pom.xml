@@ -37,6 +37,13 @@
 
     <build>
         <finalName>class-score</finalName>
+        <resources>
+            <!-- 打开资源过滤，让 build.properties 里的版本号与构建时间在打包时写入 -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
