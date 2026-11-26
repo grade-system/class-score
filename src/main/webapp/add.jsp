@@ -21,31 +21,46 @@
   <div class="err">${error}</div>
 </c:if>
 
-<form action="scores" method="post">
+<form action="scores" method="post" onsubmit="return checkForm(this)">
   <div class="row">
     <label>学号：</label>
-    <input type="text" name="studentNo" value="${param.studentNo}">
+    <input type="text" name="studentNo" value="${param.studentNo}" required>
   </div>
   <div class="row">
     <label>姓名：</label>
-    <input type="text" name="studentName" value="${param.studentName}">
+    <input type="text" name="studentName" value="${param.studentName}" required>
   </div>
   <div class="row">
     <label>班级：</label>
-    <input type="text" name="className" value="${param.className}">
+    <input type="text" name="className" value="${param.className}" placeholder="留空默认为软件工程2班">
   </div>
   <div class="row">
     <label>科目：</label>
-    <input type="text" name="subject" value="${param.subject}">
+    <input type="text" name="subject" value="${param.subject}" required>
   </div>
   <div class="row">
     <label>分数：</label>
-    <input type="text" name="score" value="${param.score}">
+    <input type="text" name="score" value="${param.score}" required placeholder="0 ~ 100">
   </div>
   <div class="row">
     <button type="submit">提交</button>
     <a href="scores">返回列表</a>
   </div>
 </form>
+<script>
+  function checkForm(form) {
+    var score = form.score.value.trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(score)) {
+      alert("分数必须是数字，最多两位小数");
+      return false;
+    }
+    var value = Number(score);
+    if (value < 0 || value > 100) {
+      alert("分数必须在 0 到 100 之间");
+      return false;
+    }
+    return true;
+  }
+</script>
 </body>
 </html>

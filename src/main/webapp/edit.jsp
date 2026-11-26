@@ -24,7 +24,7 @@
   <div class="err">${error}</div>
 </c:if>
 
-<form action="scores" method="post">
+<form action="scores" method="post" onsubmit="return checkForm(this)">
   <input type="hidden" name="action" value="update">
   <input type="hidden" name="id" value="${record.id}">
   <div class="row"><label>学号：</label><span class="ro">${record.studentNo}</span></div>
@@ -34,16 +34,31 @@
   <div class="row"><label>当前分数：</label><span class="ro">${record.score}</span></div>
   <div class="row">
     <label>修改后分数：</label>
-    <input type="text" name="score" value="${record.score}">
+    <input type="text" name="score" value="${record.score}" required placeholder="0 ~ 100">
   </div>
   <div class="row">
     <label>修改人：</label>
-    <input type="text" name="operator" value="${param.operator}" placeholder="必填，例如：陈春丽">
+    <input type="text" name="operator" value="${param.operator}" placeholder="必填，例如：陈春丽" required>
   </div>
   <div class="row">
     <button type="submit">保存修改</button>
     <a href="scores">返回列表</a>
   </div>
 </form>
+<script>
+  function checkForm(form) {
+    if (form.operator.value.trim() === "") {
+      alert("业务规则：修改成绩必须填写修改人");
+      form.operator.focus();
+      return false;
+    }
+    var score = form.score.value.trim();
+    if (!/^\d+(\.\d{1,2})?$/.test(score) || Number(score) < 0 || Number(score) > 100) {
+      alert("分数必须是 0 到 100 之间的数字");
+      return false;
+    }
+    return true;
+  }
+</script>
 </body>
 </html>
