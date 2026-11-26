@@ -1,12 +1,13 @@
 package com.example.service;
 
 import com.example.dao.ScoreRecordDao;
+import com.example.entity.ScoreChangeLog;
 import com.example.entity.ScoreRecord;
 
 import java.util.List;
 
 /**
- * 成绩业务层：参数校验、平均分与及格率统计
+ * 成绩业务层：参数校验、修改留痕、平均分与及格率统计
  */
 public class ScoreRecordService {
 
@@ -14,6 +15,14 @@ public class ScoreRecordService {
 
     public List<ScoreRecord> listAll() {
         return scoreRecordDao.findAll();
+    }
+
+    public ScoreRecord get(int id) {
+        return scoreRecordDao.findById(id);
+    }
+
+    public List<ScoreChangeLog> recentLogs(int limit) {
+        return scoreRecordDao.findLogs(limit);
     }
 
     public void add(ScoreRecord record) {
@@ -34,7 +43,26 @@ public class ScoreRecordService {
         if (record.getClassName() == null || record.getClassName().trim().isEmpty()) {
             record.setClassName("软件工程2班");
         }
+        if (scoreRecordDao.exists(record.getStudentNo(), record.getSubject())) {
+            throw new IllegalArgumentException("该学生该科目已有成绩，请使用“修改”功能");
+        }
         scoreRecordDao.insert(record);
+    }
+
+    /**
+     * 业务规则：修改成绩必须填写修改人，且分数在 0~100 之间，修改后写入留痕
+     */
+    public void updateScore(int id, double newScore, String operator) {
+        if (operator == null || operator.trim().isEmpty()) {
+            throw new IllegalArgumentException("请填写修改人");
+        }
+        if (newScore < 0 || newScore > 100) {
+            throw new IllegalArgumentException("分数必须在 0 到 100 之间");
+        }
+        boolean ok = scoreRecordDao.updateWithLog(id, newScore, operator.trim());
+        if (!ok) {
+            throw new IllegalArgumentException("成绩记录不存在，无法修改");
+        }
     }
 
     /** 平均分：无数据时返回 0 */

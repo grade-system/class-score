@@ -32,6 +32,9 @@
 <c:if test="${param.ok == 1}">
   <div class="ok">成绩录入成功！</div>
 </c:if>
+<c:if test="${param.updated == 1}">
+  <div class="ok">成绩修改成功，已记录修改人与修改时间。</div>
+</c:if>
 
 <div class="stats">
   <div class="stat">
@@ -45,6 +48,7 @@
 </div>
 
 <a class="btn" href="add.jsp">+ 录入成绩</a>
+<a class="btn" href="scores?action=logs">修改记录</a>
 
 <c:choose>
   <c:when test="${empty scoreList}">
@@ -61,6 +65,9 @@
         <th>分数</th>
         <th>是否及格</th>
         <th>录入时间</th>
+        <th>修改人</th>
+        <th>修改时间</th>
+        <th>操作</th>
       </tr>
       <c:forEach items="${scoreList}" var="s">
         <tr>
@@ -77,6 +84,14 @@
             </c:choose>
           </td>
           <td><fmt:formatDate value="${s.createTime}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+          <td><c:out value="${empty s.modifier ? '-' : s.modifier}"/></td>
+          <td>
+            <c:choose>
+              <c:when test="${empty s.updateTime}">-</c:when>
+              <c:otherwise><fmt:formatDate value="${s.updateTime}" pattern="yyyy-MM-dd HH:mm:ss"/></c:otherwise>
+            </c:choose>
+          </td>
+          <td><a href="scores?action=edit&id=${s.id}">修改</a></td>
         </tr>
       </c:forEach>
     </table>

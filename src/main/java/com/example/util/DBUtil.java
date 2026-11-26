@@ -1,5 +1,6 @@
 package com.example.util;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -7,21 +8,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
- * 数据库工具类：统一获取连接、绑定参数、遍历结果集并关闭资源
+ * 数据库工具类：连接参数来自 db.properties，支持环境变量覆盖
+ * 环境变量：DB_URL / DB_USERNAME / DB_PASSWORD
  */
 public class DBUtil {
 
-    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String URL = "jdbc:mysql://localhost:3306/class_score?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8";
-    private static final String USER = "root";
-    private static final String PWD = "123456";
+    private static final Properties CONFIG = new Properties();
 
     static {
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
+        try (InputStream in = DBUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (in == null) {
+                throw new IllegalStateException("classpath 下缺少 db.properties");
+            }
+            CONFIG.load(in);
+            Class.forName(get("db.driver", "com.mysql.cj.jdbc.Driver"));
+        } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
     }
@@ -29,8 +33,29 @@ public class DBUtil {
     private DBUtil() {
     }
 
+    private static String get(String key, String defaultValue) {
+        String envKey = "DB_" + key.substring(key.indexOf('.') + 1).toUpperCase();
+        String env = System.getenv(envKey);
+        if (env != null && !env.trim().isEmpty()) {
+            return env.trim();
+        }
+        return CONFIG.getProperty(key, defaultValue);
+    }
+
+    /** 供健康检查等外部读取配置（同样优先取环境变量） */
+    public static String config(String key, String defaultValue) {
+        return get(key, defaultValue);
+    }
+
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PWD);
+        String url = get("db.url", "");
+        String user = get("db.username", "");
+        String password = get("db.password", "");
+        if (password.isEmpty()) {
+            throw new SQLException("数据库密码未配置：请设置环境变量 DB_PASSWORD，"
+                    + "或在 Tomcat 的 bin/setenv.sh 中导出 DB_PASSWORD（参考 db.properties.template）");
+        }
+        return DriverManager.getConnection(url, user, password);
     }
 
     public interface RowMapper<T> {
@@ -39,37 +64,32 @@ public class DBUtil {
 
     public static <T> List<T> query(String sql, RowMapper<T> mapper, Object... params) {
         List<T> list = new ArrayList<T>();
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             setParams(ps, params);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapper.mapRow(rs));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapper.mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException("数据库查询失败", e);
-        } finally {
-            close(conn, ps, rs);
         }
         return list;
     }
 
+    public static <T> T queryOne(String sql, RowMapper<T> mapper, Object... params) {
+        List<T> list = query(sql, mapper, params);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
     public static int update(String sql, Object... params) {
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             setParams(ps, params);
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("数据库更新失败", e);
-        } finally {
-            close(conn, ps, null);
         }
     }
 
@@ -79,21 +99,6 @@ public class DBUtil {
         }
         for (int i = 0; i < params.length; i++) {
             ps.setObject(i + 1, params[i]);
-        }
-    }
-
-    private static void close(Connection conn, PreparedStatement ps, ResultSet rs) {
-        try {
-            if (rs != null) rs.close();
-        } catch (SQLException ignored) {
-        }
-        try {
-            if (ps != null) ps.close();
-        } catch (SQLException ignored) {
-        }
-        try {
-            if (conn != null) conn.close();
-        } catch (SQLException ignored) {
         }
     }
 }

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Tomcat 9 环境变量模板：复制到 $CATALINA_BASE/bin/setenv.sh 并 chmod +x
+# Tomcat 9 的 bin/catalina.sh 在启动时会自动 source setenv.sh，
+# 因此数据库密码不需要写进 WAR 内的 db.properties。
+#
+#   cp scripts/tomcat-setenv.sh.template /opt/tomcat/bin/setenv.sh
+#   chmod +x /opt/tomcat/bin/setenv.sh
+#   /opt/tomcat/bin/shutdown.sh && /opt/tomcat/bin/startup.sh
+
+export DB_URL="jdbc:mysql://127.0.0.1:3306/class_score?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowPublicKeyRetrieval=true"
+export DB_USERNAME="score_user"
+export DB_PASSWORD="Score@2026"
+
+# JVM 参数：固定 UTF-8，避免 JSP 中文乱码与文件编码差异
+export JAVA_OPTS="$JAVA_OPTS -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai"
