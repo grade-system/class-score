@@ -51,12 +51,44 @@ public class ScoreRecordDao {
     };
 
     /**
-     * 列表查询：科目精确筛选 + 学号/姓名模糊搜索，条件为空时等价于全量查询
+     * 分页查询：科目精确筛选 + 学号/姓名模糊搜索，按 id 倒序取 offset 开始的 limit 条
      */
-    public List<ScoreRecord> find(String subject, String keyword) {
+    public List<ScoreRecord> find(String subject, String keyword, int offset, int limit) {
         StringBuilder sql = new StringBuilder("select id, student_no, student_name, class_name, subject, score, "
                 + "create_time, modifier, update_time from score_record where 1 = 1");
         List<Object> args = new ArrayList<Object>();
+        appendConditions(sql, args, subject, keyword);
+        sql.append(" order by id desc limit ? offset ?");
+        args.add(limit);
+        args.add(offset);
+        return DBUtil.query(sql.toString(), ROW_MAPPER, args.toArray());
+    }
+
+    /**
+     * 汇总查询：返回 {总条数, 平均分, 及格率(%)}，统计范围与列表筛选条件一致
+     */
+    public double[] summary(String subject, String keyword) {
+        StringBuilder sql = new StringBuilder("select count(*) total, coalesce(avg(score), 0) avg_score, "
+                + "coalesce(sum(case when score >= 60 then 1 else 0 end), 0) pass_count "
+                + "from score_record where 1 = 1");
+        List<Object> args = new ArrayList<Object>();
+        appendConditions(sql, args, subject, keyword);
+        Double[] result = DBUtil.queryOne(sql.toString(), new DBUtil.RowMapper<Double[]>() {
+            @Override
+            public Double[] mapRow(ResultSet rs) throws SQLException {
+                double total = rs.getDouble("total");
+                double pass = rs.getDouble("pass_count");
+                return new Double[]{total, rs.getDouble("avg_score"), total == 0 ? 0.0 : pass * 100.0 / total};
+            }
+        }, args.toArray());
+        if (result == null) {
+            return new double[]{0, 0, 0};
+        }
+        return new double[]{result[0], result[1], result[2]};
+    }
+
+    /** 列表与汇总共用的 where 条件拼装，保证两者筛选口径一致 */
+    private static void appendConditions(StringBuilder sql, List<Object> args, String subject, String keyword) {
         if (subject != null && !subject.trim().isEmpty()) {
             sql.append(" and subject = ?");
             args.add(subject.trim());
@@ -67,8 +99,6 @@ public class ScoreRecordDao {
             args.add(like);
             args.add(like);
         }
-        sql.append(" order by id desc");
-        return DBUtil.query(sql.toString(), ROW_MAPPER, args.toArray());
     }
 
     /** 科目下拉选项：去重并按字典序 */

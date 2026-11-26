@@ -14,9 +14,24 @@ public class ScoreRecordService {
 
     private final ScoreRecordDao scoreRecordDao = new ScoreRecordDao();
 
-    /** 列表查询：按科目筛选、按学号或姓名模糊搜索 */
-    public List<ScoreRecord> search(String subject, String keyword) {
-        return scoreRecordDao.find(subject, keyword);
+    /** 每页条数 */
+    public static final int PAGE_SIZE = 10;
+
+    /** 分页查询：pageNo 从 1 开始，按科目筛选、按学号或姓名模糊搜索 */
+    public List<ScoreRecord> search(String subject, String keyword, int pageNo) {
+        int page = pageNo < 1 ? 1 : pageNo;
+        return scoreRecordDao.find(subject, keyword, (page - 1) * PAGE_SIZE, PAGE_SIZE);
+    }
+
+    /** 列表汇总：{总条数, 平均分, 及格率(%)}，统计口径与当前筛选条件一致 */
+    public double[] summary(String subject, String keyword) {
+        return scoreRecordDao.summary(subject, keyword);
+    }
+
+    /** 总页数：无数据时返回 1，保证页码控件可用 */
+    public int totalPages(double total) {
+        int pages = (int) Math.ceil(total / PAGE_SIZE);
+        return pages < 1 ? 1 : pages;
     }
 
     /** 科目下拉选项 */
@@ -76,31 +91,5 @@ public class ScoreRecordService {
         if (!ok) {
             throw new IllegalArgumentException("成绩记录不存在，无法修改");
         }
-    }
-
-    /** 平均分：无数据时返回 0 */
-    public double average(List<ScoreRecord> list) {
-        if (list == null || list.isEmpty()) {
-            return 0;
-        }
-        double sum = 0;
-        for (ScoreRecord r : list) {
-            sum += r.getScore();
-        }
-        return sum / list.size();
-    }
-
-    /** 及格率（>=60 分）：无数据时返回 0 */
-    public double passRate(List<ScoreRecord> list) {
-        if (list == null || list.isEmpty()) {
-            return 0;
-        }
-        int pass = 0;
-        for (ScoreRecord r : list) {
-            if (r.getScore() >= 60) {
-                pass++;
-            }
-        }
-        return pass * 100.0 / list.size();
     }
 }

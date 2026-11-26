@@ -36,15 +36,31 @@ public class ScoreRecordServlet extends HttpServlet {
         }
         String subject = trim(request.getParameter("subject"));
         String keyword = trim(request.getParameter("kw"));
-        List<ScoreRecord> list = scoreRecordService.search(subject, keyword);
+        int pageNo = parsePage(request.getParameter("page"));
+        double[] summary = scoreRecordService.summary(subject, keyword);
+        int pages = scoreRecordService.totalPages(summary[0]);
+        if (pageNo > pages) {
+            pageNo = pages;
+        }
+        List<ScoreRecord> list = scoreRecordService.search(subject, keyword, pageNo);
         request.setAttribute("scoreList", list);
         request.setAttribute("subjects", scoreRecordService.subjects());
         request.setAttribute("subject", subject);
         request.setAttribute("kw", keyword);
-        request.setAttribute("total", list.size());
-        request.setAttribute("average", String.format("%.1f", scoreRecordService.average(list)));
-        request.setAttribute("passRate", String.format("%.1f", scoreRecordService.passRate(list)));
+        request.setAttribute("total", (int) summary[0]);
+        request.setAttribute("pageNo", pageNo);
+        request.setAttribute("pages", pages);
+        request.setAttribute("average", String.format("%.1f", summary[1]));
+        request.setAttribute("passRate", String.format("%.1f", summary[2]));
         request.getRequestDispatcher("list.jsp").forward(request, response);
+    }
+
+    private static int parsePage(String value) {
+        try {
+            return Math.max(1, Integer.parseInt(value));
+        } catch (Exception e) {
+            return 1;
+        }
     }
 
     private static String trim(String value) {

@@ -27,6 +27,10 @@
     .filter button { padding: 4px 14px; background: #1976d2; color: #fff;
                      border: none; border-radius: 3px; cursor: pointer; }
     .filter a { color: #1976d2; text-decoration: none; margin-left: 10px; }
+    .pager { margin: 14px 0 4px; font-size: 14px; color: #555; }
+    .pager a, .pager span.cur { display: inline-block; padding: 3px 10px; margin-right: 6px;
+                                border: 1px solid #d0d7de; border-radius: 4px; text-decoration: none; color: #1976d2; }
+    .pager span.cur { background: #1976d2; color: #fff; border-color: #1976d2; }
   </style>
 </head>
 <body>
@@ -120,6 +124,26 @@
         </tr>
       </c:forEach>
     </table>
+
+    <c:url var="pageUrl" value="scores">
+      <c:param name="subject" value="${subject}"/>
+      <c:param name="kw" value="${kw}"/>
+    </c:url>
+    <div class="pager">
+      共 ${total} 条，第 ${pageNo}/${pages} 页
+      <c:if test="${pageNo > 1}">
+        <a href="${pageUrl}&page=${pageNo - 1}">上一页</a>
+      </c:if>
+      <c:forEach begin="1" end="${pages}" var="p">
+        <c:choose>
+          <c:when test="${p == pageNo}"><span class="cur">${p}</span></c:when>
+          <c:otherwise><a href="${pageUrl}&page=${p}">${p}</a></c:otherwise>
+        </c:choose>
+      </c:forEach>
+      <c:if test="${pageNo < pages}">
+        <a href="${pageUrl}&page=${pageNo + 1}">下一页</a>
+      </c:if>
+    </div>
   </c:otherwise>
 </c:choose>
 </body>
