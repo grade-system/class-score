@@ -32,11 +32,21 @@ public class ScoreRecordServlet extends HttpServlet {
             request.getRequestDispatcher("logs.jsp").forward(request, response);
             return;
         }
-        List<ScoreRecord> list = scoreRecordService.listAll();
+        String subject = trim(request.getParameter("subject"));
+        String keyword = trim(request.getParameter("kw"));
+        List<ScoreRecord> list = scoreRecordService.search(subject, keyword);
         request.setAttribute("scoreList", list);
+        request.setAttribute("subjects", scoreRecordService.subjects());
+        request.setAttribute("subject", subject);
+        request.setAttribute("kw", keyword);
+        request.setAttribute("total", list.size());
         request.setAttribute("average", String.format("%.1f", scoreRecordService.average(list)));
         request.setAttribute("passRate", String.format("%.1f", scoreRecordService.passRate(list)));
         request.getRequestDispatcher("list.jsp").forward(request, response);
+    }
+
+    private static String trim(String value) {
+        return value == null ? null : value.trim();
     }
 
     @Override

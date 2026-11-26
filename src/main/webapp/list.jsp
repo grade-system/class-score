@@ -21,6 +21,12 @@
             background: #1976d2; color: #fff; text-decoration: none; border-radius: 3px; }
     .pass { color: #2e7d32; font-weight: bold; }
     .fail { color: #c62828; font-weight: bold; }
+    .filter { margin: 0 0 14px; padding: 10px 12px; background: #fafbfc;
+              border: 1px solid #d0d7de; border-radius: 6px; font-size: 14px; }
+    .filter select, .filter input[type=text] { padding: 4px 6px; margin-right: 14px; }
+    .filter button { padding: 4px 14px; background: #1976d2; color: #fff;
+                     border: none; border-radius: 3px; cursor: pointer; }
+    .filter a { color: #1976d2; text-decoration: none; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -38,6 +44,10 @@
 
 <div class="stats">
   <div class="stat">
+    <div class="label">记录数</div>
+    <div class="value">${total}</div>
+  </div>
+  <div class="stat">
     <div class="label">平均分</div>
     <div class="value">${average}</div>
   </div>
@@ -46,6 +56,20 @@
     <div class="value">${passRate}%</div>
   </div>
 </div>
+
+<form class="filter" action="scores" method="get">
+  <label>科目：</label>
+  <select name="subject">
+    <option value="">全部科目</option>
+    <c:forEach items="${subjects}" var="sub">
+      <option value="${sub}" ${sub == subject ? 'selected' : ''}>${sub}</option>
+    </c:forEach>
+  </select>
+  <label>学号/姓名：</label>
+  <input type="text" name="kw" value="${kw}" placeholder="模糊搜索">
+  <button type="submit">查询</button>
+  <a href="scores">重置</a>
+</form>
 
 <a class="btn" href="add.jsp">+ 录入成绩</a>
 <a class="btn" href="scores?action=logs">修改记录</a>

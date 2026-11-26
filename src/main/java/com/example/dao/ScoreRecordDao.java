@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,10 +49,36 @@ public class ScoreRecordDao {
         }
     };
 
-    public List<ScoreRecord> findAll() {
-        String sql = "select id, student_no, student_name, class_name, subject, score, "
-                + "create_time, modifier, update_time from score_record order by id desc";
-        return DBUtil.query(sql, ROW_MAPPER);
+    /**
+     * 列表查询：科目精确筛选 + 学号/姓名模糊搜索，条件为空时等价于全量查询
+     */
+    public List<ScoreRecord> find(String subject, String keyword) {
+        StringBuilder sql = new StringBuilder("select id, student_no, student_name, class_name, subject, score, "
+                + "create_time, modifier, update_time from score_record where 1 = 1");
+        List<Object> args = new ArrayList<Object>();
+        if (subject != null && !subject.trim().isEmpty()) {
+            sql.append(" and subject = ?");
+            args.add(subject.trim());
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" and (student_no like ? or student_name like ?)");
+            String like = "%" + keyword.trim() + "%";
+            args.add(like);
+            args.add(like);
+        }
+        sql.append(" order by id desc");
+        return DBUtil.query(sql.toString(), ROW_MAPPER, args.toArray());
+    }
+
+    /** 科目下拉选项：去重并按字典序 */
+    public List<String> findSubjects() {
+        String sql = "select distinct subject from score_record order by subject";
+        return DBUtil.query(sql, new DBUtil.RowMapper<String>() {
+            @Override
+            public String mapRow(ResultSet rs) throws SQLException {
+                return rs.getString(1);
+            }
+        });
     }
 
     public ScoreRecord findById(int id) {

@@ -13,8 +13,14 @@ public class ScoreRecordService {
 
     private final ScoreRecordDao scoreRecordDao = new ScoreRecordDao();
 
-    public List<ScoreRecord> listAll() {
-        return scoreRecordDao.findAll();
+    /** 列表查询：按科目筛选、按学号或姓名模糊搜索 */
+    public List<ScoreRecord> search(String subject, String keyword) {
+        return scoreRecordDao.find(subject, keyword);
+    }
+
+    /** 科目下拉选项 */
+    public List<String> subjects() {
+        return scoreRecordDao.findSubjects();
     }
 
     public ScoreRecord get(int id) {
